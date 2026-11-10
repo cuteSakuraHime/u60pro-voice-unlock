@@ -2,10 +2,16 @@ import hashlib
 import struct
 import unittest
 from diag import build_helper, parse_response
-from unlock import cleared, validate_backup
+from unlock import cleared, soc_family, validate_backup
 
 
 class UnlockTests(unittest.TestCase):
+    def test_soc_family_variants_match(self):
+        for raw in (b'SDXPINN', b'SDXPINN\n', b'SDXPINN-0-(null)\n'):
+            self.assertEqual(soc_family(raw), b'SDXPINN')
+        self.assertEqual(soc_family(b'SDX75-1'), b'SDX75')
+        self.assertEqual(soc_family(b''), b'')
+
     def test_only_voice_bit_changes(self):
         for first in range(256):
             before = bytes([first]) + bytes(range(127))

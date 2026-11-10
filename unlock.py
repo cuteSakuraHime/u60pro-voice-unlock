@@ -41,6 +41,11 @@ def enable_debug(host):
     print('Debug mode requested. Reconnect USB if necessary, then run inspect.')
 
 
+def soc_family(raw):
+    """Same device reports 'SDXPINN' or 'SDXPINN-0-(null)' depending on boot; keep the family."""
+    return raw.strip().split(b'-', 1)[0]
+
+
 def cleared(data):
     if len(data) != 128:
         raise ValueError('Expected 128-byte NV value')
@@ -86,7 +91,7 @@ def main():
     if adb('shell', 'uname -m').strip() != b'aarch64' or adb('shell', 'id -u').strip() != b'0':
         raise RuntimeError('Requires ARM64 Linux router with root ADB')
     model = adb('shell', 'cat /proc/device-tree/model 2>/dev/null || true').replace(b'\0', b'').strip()
-    sku = adb('shell', 'cat /sys/devices/soc0/sku 2>/dev/null || true').strip()
+    sku = soc_family(adb('shell', 'cat /sys/devices/soc0/sku 2>/dev/null || true'))
     if sku != b'SDXPINN':
         raise RuntimeError('Unsupported SoC SKU; only the tested SDXPINN profile is supported')
     firmware = adb('shell', 'cat /etc/openwrt_release 2>/dev/null || true').strip()
