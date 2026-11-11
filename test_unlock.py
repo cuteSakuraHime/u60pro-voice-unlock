@@ -1,7 +1,7 @@
 import hashlib
 import struct
 import unittest
-from diag import build_helper, parse_response
+from diag import build_helper, parse_diag_endpoint, parse_response
 from unlock import cleared, soc_family, validate_backup
 
 
@@ -49,15 +49,26 @@ class UnlockTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             parse_response(raw, packet)
 
+    def test_diag_endpoint_discovery(self):
+        listing = b'''\n  Service Version Instance Node  Port\n     4097     N/A        1    3    26 DIAG service (MODEM:CMD)\n        9       2        0    3    69 Voice service\n'''
+        self.assertEqual(parse_diag_endpoint(listing), (3, 26))
+        with self.assertRaises(RuntimeError):
+            parse_diag_endpoint(b'')
+        with self.assertRaises(RuntimeError):
+            parse_diag_endpoint(listing + listing.splitlines(keepends=True)[2])
+
     def test_generated_elf(self):
         packet = struct.pack('<BH', 0x26, 5280) + bytes(130)
-        elf = build_helper(packet)
+        elf = build_helper(packet, node=7, port=123)
         self.assertEqual(len(elf), 8192)
         self.assertEqual(elf[:4], b'\x7fELF')
         self.assertEqual(struct.unpack_from('<H', elf, 18)[0], 183)
+        self.assertEqual(struct.unpack_from('<II', elf, 0x1B04), (7, 123))
         self.assertEqual(elf[0x1B20:0x1B20 + len(packet)], packet)
         with self.assertRaises(ValueError):
             build_helper(bytes(1217))
+        with self.assertRaises(ValueError):
+            build_helper(packet, node=0)
 
 
 if __name__ == '__main__':

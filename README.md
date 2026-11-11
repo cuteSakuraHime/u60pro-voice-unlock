@@ -68,7 +68,7 @@ python unlock.py restore private-backups/YOUR_ORIGINAL_BACKUP.json
 ## 文件及验证
 
 - `unlock.py`：原厂调试接口、设备检查、NV 备份/解锁/恢复/重启后核验。
-- `diag.py`：运行时生成最小 ARM64 Linux QRTR 程序，端点为已观察到的 node 3 / port 24；上传到独立临时目录，结束后尝试清理。不分发厂商二进制。
+- `diag.py`：通过 `qrtr-lookup` 自动发现当前启动中的 `DIAG service (MODEM:CMD)` 节点和端口，再运行时生成最小 ARM64 Linux QRTR 程序；上传到独立临时目录，结束后尝试清理。不分发厂商二进制。B29 等固件或不同启动中端口可能变化，不再假定 node 3 / port 24。
 - `test_unlock.py`：纯离线测试，不接触路由器。
 
 ```sh
